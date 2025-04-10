@@ -4,9 +4,9 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AnimatePresence } from 'framer-motion';
-
+import ProductReviewPage from './components/ProductReviewPage';
+import AllReviews from './components/AllReviews';
 import Navbar from './components/Navbar';
-import Dashboard from './components/Dashboard';
 import ProductReviews from './components/ProductReviews';
 import ComplaintForm from './components/ComplaintForm';
 import IncidentTracking from './components/IncidentTracking';
@@ -123,112 +123,29 @@ const PrivateRoute = ({ children }) => {
   return children;
 };
 
-function App() {
+const App = () => {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <AuthProvider>
+    <AuthProvider>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
         <Router>
-          <div className="app">
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route
-                path="/"
-                element={
-                  <PrivateRoute>
-                    <>
-                      <Navbar />
-                      <AnimatePresence mode="wait">
-                        <main className="main-content">
-                          <Dashboard />
-                        </main>
-                      </AnimatePresence>
-                    </>
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/reviews"
-                element={
-                  <PrivateRoute>
-                    <>
-                      <Navbar />
-                      <AnimatePresence mode="wait">
-                        <main className="main-content">
-                          <ProductReviews />
-                        </main>
-                      </AnimatePresence>
-                    </>
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/complaints"
-                element={
-                  <PrivateRoute>
-                    <>
-                      <Navbar />
-                      <AnimatePresence mode="wait">
-                        <main className="main-content">
-                          <ComplaintForm />
-                        </main>
-                      </AnimatePresence>
-                    </>
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/incidents"
-                element={
-                  <PrivateRoute>
-                    <>
-                      <Navbar />
-                      <AnimatePresence mode="wait">
-                        <main className="main-content">
-                          <IncidentTracking />
-                        </main>
-                      </AnimatePresence>
-                    </>
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/analytics"
-                element={
-                  <PrivateRoute>
-                    <>
-                      <Navbar />
-                      <AnimatePresence mode="wait">
-                        <main className="main-content">
-                          <Analytics />
-                        </main>
-                      </AnimatePresence>
-                    </>
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/profile"
-                element={
-                  <PrivateRoute>
-                    <>
-                      <Navbar />
-                      <AnimatePresence mode="wait">
-                        <main className="main-content">
-                          <Profile />
-                        </main>
-                      </AnimatePresence>
-                    </>
-                  </PrivateRoute>
-                }
-              />
-            </Routes>
-          </div>
+          <Navbar />
+          <Routes>
+            <Route path="/" element={<PrivateRoute><Analytics /></PrivateRoute>} />
+            <Route path="/incidents" element={<PrivateRoute><IncidentTracking /></PrivateRoute>} />
+            <Route path="/complaints" element={<PrivateRoute><ComplaintForm /></PrivateRoute>} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
+            <Route path="/reviews" element={<AllReviews />} />
+            <Route path="/reviews/:productId" element={<PrivateRoute><ProductReviewPage /></PrivateRoute>} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
         </Router>
-      </AuthProvider>
-    </ThemeProvider>
+      </ThemeProvider>
+    </AuthProvider>
   );
-}
+};
 
 export default App;

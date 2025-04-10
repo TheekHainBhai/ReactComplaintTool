@@ -4,10 +4,10 @@ const auth = require('../middleware/auth');
 
 const router = express.Router();
 
-// Get all incidents
+// Get incidents reported by the current user
 router.get('/', auth, async (req, res) => {
   try {
-    const incidents = await Incident.find()
+    const incidents = await Incident.find({ reportedBy: req.user._id })
       .populate('reportedBy', 'username company')
       .populate('assignedTo', 'username')
       .sort({ createdAt: -1 });
@@ -17,10 +17,10 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
-// Get recent incidents for dashboard
+// Get recent incidents reported by the current user for dashboard
 router.get('/recent', auth, async (req, res) => {
   try {
-    const incidents = await Incident.find()
+    const incidents = await Incident.find({ reportedBy: req.user._id })
       .populate('reportedBy', 'username company')
       .sort({ createdAt: -1 })
       .limit(5);

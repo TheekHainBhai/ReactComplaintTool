@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Container,
   Grid,
@@ -16,6 +16,17 @@ import {
   ListItem,
   ListItemText,
   ListItemIcon,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Paper,
+  CardHeader,
+  CardActions,
+  Collapse,
+  Tooltip,
+  Skeleton,
 } from '@mui/material';
 import {
   WarningAmber,
@@ -35,444 +46,540 @@ import {
   CalendarToday,
   TrendingDown,
   Person,
+  Star,
+  Assignment,
+  ExpandMore,
+  ExpandLess,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
-import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, CartesianGrid, XAxis, YAxis, Line, BarChart, Bar, Tooltip as RechartsTooltip } from 'recharts';
+import analyticsService from '../services/analyticsService';
 
 const MotionCard = motion(Card);
 
 const Dashboard = () => {
+  const [analytics, setAnalytics] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [expanded, setExpanded] = useState({
+    recentIncidents: false,
+    categoryPerformance: false,
+    topPerformers: false,
+    trends: false,
+  });
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, []);
+
+  const fetchAnalytics = async () => {
+    try {
+      setLoading(true);
+      const data = await analyticsService.getDashboardAnalytics();
+      setAnalytics(data);
+      setError(null);
+    } catch (err) {
+      setError('Failed to fetch analytics. Please try again later.');
+      console.error('Error fetching analytics:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExpandClick = (section) => {
+    setExpanded(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  if (loading) {
+    return (
+      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+        <Grid container spacing={3}>
+          {[...Array(4)].map((_, index) => (
+            <Grid item xs={12} sm={6} md={3} key={index}>
+              <MotionCard
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <CardContent>
+                  <Skeleton variant="circular" width={40} height={40} />
+                  <Skeleton height={20} width="80%" style={{ marginBottom: 6 }} />
+                  <Skeleton height={20} width="60%" />
+                </CardContent>
+              </MotionCard>
+            </Grid>
+          ))}
+        </Grid>
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+        <Typography color="error" variant="h6" gutterBottom>
+          {error}
+        </Typography>
+        <Button
+          onClick={fetchAnalytics}
+          variant="contained"
+          color="primary"
+          sx={{ mt: 2 }}
+        >
+          Retry
+        </Button>
+      </Container>
+    );
+  }
+
+  if (!analytics) {
+    return null;
+  }
+
+  const formatTime = (seconds) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return `${hours}h ${minutes}m`;
+  };
+
   const stats = [
     {
       title: 'Active Complaints',
-      value: '24',
+      value: analytics.stats?.activeComplaints || '0',
       change: '+12%',
       trend: 'up',
       icon: <WarningAmber fontSize="large" />,
       color: '#ff9800',
       bgColor: '#fff3e0',
       details: [
-        { label: 'High Priority', value: '8', icon: <PriorityHigh fontSize="small" color="error" /> },
-        { label: 'This Week', value: '15', icon: <CalendarToday fontSize="small" color="primary" /> },
-        { label: 'Response Rate', value: '92%', icon: <Speed fontSize="small" color="success" /> },
+        { 
+          label: 'This Week', 
+          value: 'N/A',
+          icon: <CalendarToday fontSize="small" color="primary" /> 
+        },
+        { 
+          label: 'Response Rate', 
+          value: 'N/A',
+          icon: <Speed fontSize="small" color="success" /> 
+        },
       ],
     },
     {
       title: 'Resolved Issues',
-      value: '156',
+      value: analytics.stats?.resolvedIssues || '0',
       change: '+8%',
       trend: 'up',
       icon: <CheckCircle fontSize="large" />,
       color: '#4caf50',
       bgColor: '#e8f5e9',
       details: [
-        { label: 'Avg Time', value: '48h', icon: <Timeline fontSize="small" color="primary" /> },
-        { label: 'Satisfaction', value: '94%', icon: <TrendingUp fontSize="small" color="success" /> },
-        { label: 'Reopened', value: '3%', icon: <TrendingDown fontSize="small" color="error" /> },
+        { 
+          label: 'Avg Time', 
+          value: formatTime(analytics.stats?.avgResolutionTime || 0),
+          icon: <Timeline fontSize="small" color="primary" /> 
+        },
+        { 
+          label: 'Satisfaction', 
+          value: 'N/A',
+          icon: <TrendingUp fontSize="small" color="success" /> 
+        },
+        { 
+          label: 'Reopened', 
+          value: 'N/A',
+          icon: <TrendingDown fontSize="small" color="error" /> 
+        },
       ],
     },
     {
       title: 'Quality Score',
-      value: '4.8',
-      change: '-2%',
-      trend: 'down',
-      icon: <Assessment fontSize="large" />,
+      value: analytics.reviews?.avgQualityScore ? `${analytics.reviews.avgQualityScore.toFixed(1)}/5` : 'N/A',
+      change: '',
+      trend: '',
+      icon: <Star fontSize="large" />,
+      color: '#ffd700',
+      bgColor: '#fff9c4',
+      details: [
+        { 
+          label: 'Total Reviews', 
+          value: analytics.reviews?.totalReviews || '0',
+          icon: <Person fontSize="small" color="primary" /> 
+        },
+        { 
+          label: 'Hygiene Score', 
+          value: analytics.reviews?.avgHygieneScore ? `${analytics.reviews.avgHygieneScore.toFixed(1)}/5` : 'N/A',
+          icon: <Assessment fontSize="small" color="success" /> 
+        },
+      ],
+    },
+    {
+      title: 'Pending Complaints',
+      value: analytics.pendingComplaints || '0',
+      change: '',
+      trend: '',
+      icon: <Assignment fontSize="large" />,
       color: '#2196f3',
       bgColor: '#e3f2fd',
-      details: [
-        { label: 'Reviews', value: '1.2k', icon: <Person fontSize="small" color="primary" /> },
-        { label: '5 Star', value: '68%', icon: <TrendingUp fontSize="small" color="success" /> },
-        { label: 'New', value: '+125', icon: <NotificationsActive fontSize="small" color="warning" /> },
-      ],
+      details: [],
     },
-    {
-      title: 'Pending Reviews',
-      value: '38',
-      change: '+5%',
-      trend: 'up',
-      icon: <Assessment fontSize="large" />,
-      color: '#9c27b0',
-      bgColor: '#f3e5f5',
-      details: [
-        { label: 'Critical', value: '12', icon: <PriorityHigh fontSize="small" color="error" /> },
-        { label: 'Today', value: '8', icon: <CalendarToday fontSize="small" color="primary" /> },
-        { label: 'Processing', value: '18', icon: <Timeline fontSize="small" color="info" /> },
-      ],
-    },
-  ];
-
-  const recentIncidents = [
-    {
-      id: 'INC-2025-001',
-      product: 'Organic Milk',
-      company: 'Fresh Dairy Ltd',
-      status: 'Under Investigation',
-      priority: 'High',
-      date: '2025-04-08',
-      icon: <LocalShipping />,
-    },
-    {
-      id: 'INC-2025-002',
-      product: 'Whole Wheat Bread',
-      company: 'Healthy Bakers Co',
-      status: 'Pending Review',
-      priority: 'Medium',
-      date: '2025-04-08',
-      icon: <Inventory />,
-    },
-    {
-      id: 'INC-2025-003',
-      product: 'Fresh Yogurt',
-      company: 'Pure Foods Inc',
-      status: 'Resolved',
-      priority: 'Low',
-      date: '2025-04-07',
-      icon: <Category />,
-    },
-  ];
-
-  const categories = [
-    { name: 'Dairy Products', progress: 85 },
-    { name: 'Packaged Foods', progress: 72 },
-    { name: 'Beverages', progress: 90 },
-    { name: 'Snacks', progress: 68 },
-  ];
-
-  const pieChartData = [
-    { name: 'Quality Issues', value: 35, color: '#ef5350' },
-    { name: 'Packaging', value: 25, color: '#42a5f5' },
-    { name: 'Delivery', value: 20, color: '#66bb6a' },
-    { name: 'Other', value: 20, color: '#ffa726' },
-  ];
-
-  const topPerformers = [
-    { name: 'Fresh Foods Inc', score: 98, avatar: 'FF' },
-    { name: 'Organic Farms Ltd', score: 95, avatar: 'OF' },
-    { name: 'Pure Dairy Co', score: 92, avatar: 'PD' },
   ];
 
   return (
-    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Grid container spacing={3}>
-        {/* Stats Cards Row */}
-        <Grid item container spacing={3} xs={12}>
-          {stats.map((stat, index) => (
-            <Grid item xs={12} sm={6} md={3} key={index}>
-              <MotionCard
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="hover-card"
-                sx={{ height: '100%', position: 'relative', overflow: 'visible' }}
-              >
-                <CardContent>
-                  <Box sx={{ position: 'absolute', top: -20, right: 20 }}>
-                    <Avatar
-                      sx={{
-                        width: 56,
-                        height: 56,
-                        bgcolor: stat.bgColor,
-                        color: stat.color,
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                      }}
-                    >
-                      {stat.icon}
-                    </Avatar>
-                  </Box>
-                  <Box sx={{ mb: 3 }} />
-                  <Typography variant="h6" color="text.secondary" gutterBottom>
+        {/* Stats Cards */}
+        {stats.map((stat, index) => (
+          <Grid item xs={12} sm={6} md={3} key={index}>
+            <MotionCard
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              sx={{
+                '&:hover': {
+                  boxShadow: 8,
+                  transform: 'translateY(-2px)',
+                  transition: 'all 0.3s ease',
+                },
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Avatar sx={{ bgcolor: stat.color, mr: 2, width: 40, height: 40 }}>
+                    {stat.icon}
+                  </Avatar>
+                  <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
                     {stat.title}
                   </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                    <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
-                      {stat.value}
+                </Box>
+                <Typography variant="h4" component="div" sx={{ mb: 2, fontWeight: 700 }}>
+                  {stat.value}
+                </Typography>
+                {stat.change && (
+                  <Chip
+                    label={stat.change}
+                    color={stat.trend === 'up' ? 'success' : 'error'}
+                    size="small"
+                    sx={{
+                      mb: 2,
+                      bgcolor: stat.trend === 'up' ? 'success.light' : 'error.light',
+                      '& .MuiChip-label': {
+                        fontWeight: 600,
+                      },
+                    }}
+                  />
+                )}
+                <Divider sx={{ mb: 2 }} />
+                {stat.details.map((detail, i) => (
+                  <Box key={i} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                    <Tooltip title={detail.label}>
+                      <span>
+                        {detail.icon}
+                      </span>
+                    </Tooltip>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        ml: 1,
+                        fontWeight: 500,
+                        color: 'text.secondary',
+                      }}
+                    >
+                      {detail.label}
                     </Typography>
-                    <Chip
-                      icon={stat.trend === 'up' ? <ArrowUpward /> : <ArrowDownward />}
-                      label={stat.change}
-                      size="small"
-                      color={stat.trend === 'up' ? 'success' : 'error'}
-                      sx={{ height: 24 }}
-                    />
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        ml: 1,
+                        fontWeight: 600,
+                        color: 'primary.main',
+                      }}
+                    >
+                      {detail.value}
+                    </Typography>
                   </Box>
-                  <Divider sx={{ my: 2 }} />
-                  <List dense>
-                    {stat.details.map((detail, idx) => (
-                      <ListItem key={idx} sx={{ px: 0 }}>
-                        <ListItemIcon sx={{ minWidth: 36 }}>
-                          {detail.icon}
+                ))}
+              </CardContent>
+            </MotionCard>
+          </Grid>
+        ))}
+
+        {/* Recent Incidents Table */}
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardHeader
+              title="Recent Incidents"
+              action={
+                <IconButton
+                  onClick={() => handleExpandClick('recentIncidents')}
+                  size="small"
+                >
+                  {expanded.recentIncidents ? <ExpandLess /> : <ExpandMore />}
+                </IconButton>
+              }
+            />
+            <Collapse in={expanded.recentIncidents} timeout="auto" unmountOnExit>
+              <CardContent>
+                {analytics.recentIncidents && analytics.recentIncidents.length > 0 ? (
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Product</TableCell>
+                        <TableCell>Company</TableCell>
+                        <TableCell>Status</TableCell>
+                        <TableCell>Priority</TableCell>
+                        <TableCell>Reporter</TableCell>
+                        <TableCell>Created</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {analytics.recentIncidents.map((incident, index) => (
+                        <TableRow key={index} hover>
+                          <TableCell>{incident.product}</TableCell>
+                          <TableCell>{incident.company}</TableCell>
+                          <TableCell>
+                            <Chip
+                              label={incident.status}
+                              color={
+                                incident.status === 'Resolved' ? 'success' :
+                                incident.status === 'Under Investigation' ? 'warning' :
+                                'error'
+                              }
+                              size="small"
+                              sx={{
+                                '& .MuiChip-label': {
+                                  fontWeight: 600,
+                                },
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={incident.priority}
+                              color={
+                                incident.priority === 'High' ? 'error' :
+                                incident.priority === 'Medium' ? 'warning' :
+                                'success'
+                              }
+                              size="small"
+                              sx={{
+                                '& .MuiChip-label': {
+                                  fontWeight: 600,
+                                },
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell>{incident.reportedBy?.username}</TableCell>
+                          <TableCell>
+                            {new Date(incident.createdAt).toLocaleDateString()}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <Box sx={{ textAlign: 'center', py: 4 }}>
+                    <Typography color="text.secondary" variant="h6">
+                      No recent incidents
+                    </Typography>
+                  </Box>
+                )}
+              </CardContent>
+            </Collapse>
+          </Card>
+        </Grid>
+
+        {/* Category Performance Chart */}
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardHeader
+              title="Category Performance"
+              action={
+                <IconButton
+                  onClick={() => handleExpandClick('categoryPerformance')}
+                  size="small"
+                >
+                  {expanded.categoryPerformance ? <ExpandLess /> : <ExpandMore />}
+                </IconButton>
+              }
+            />
+            <Collapse in={expanded.categoryPerformance} timeout="auto" unmountOnExit>
+              <CardContent>
+                {analytics.categoryPerformance && analytics.categoryPerformance.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={analytics.categoryPerformance}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        paddingAngle={5}
+                        dataKey="performance"
+                      >
+                        {analytics.categoryPerformance.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={COLORS[index % COLORS.length]}
+                          />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            return (
+                              <Box sx={{ p: 2, bgcolor: 'background.paper', border: '1px solid #ccc' }}>
+                                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                  {payload[0].payload.category}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                  Performance: {payload[0].value.toFixed(1)}%
+                                </Typography>
+                              </Box>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <Box sx={{ textAlign: 'center', py: 4 }}>
+                    <Typography color="text.secondary" variant="h6">
+                      No category data available
+                    </Typography>
+                  </Box>
+                )}
+              </CardContent>
+            </Collapse>
+          </Card>
+        </Grid>
+
+        {/* Top Performers List */}
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardHeader
+              title="Top Performers"
+              action={
+                <IconButton
+                  onClick={() => handleExpandClick('topPerformers')}
+                  size="small"
+                >
+                  {expanded.topPerformers ? <ExpandLess /> : <ExpandMore />}
+                </IconButton>
+              }
+            />
+            <Collapse in={expanded.topPerformers} timeout="auto" unmountOnExit>
+              <CardContent>
+                {analytics.topPerformers && analytics.topPerformers.length > 0 ? (
+                  <List>
+                    {analytics.topPerformers.map((performer, index) => (
+                      <ListItem
+                        key={index}
+                        sx={{
+                          '&:hover': {
+                            bgcolor: 'action.hover',
+                          },
+                        }}
+                      >
+                        <ListItemIcon>
+                          <PriorityHigh color="primary" />
                         </ListItemIcon>
-                        <ListItemText 
-                          primary={detail.label}
-                          secondary={detail.value}
-                          primaryTypographyProps={{ variant: 'body2', color: 'text.secondary' }}
-                          secondaryTypographyProps={{ variant: 'body2', color: 'text.primary', fontWeight: 'medium' }}
+                        <ListItemText
+                          primary={performer.company}
+                          secondary={`Resolution Rate: ${performer.resolutionRate.toFixed(1)}%`}
+                          primaryTypographyProps={{
+                            fontWeight: 600,
+                            color: 'primary.main',
+                          }}
+                          secondaryTypographyProps={{
+                            color: 'text.secondary',
+                          }}
                         />
                       </ListItem>
                     ))}
                   </List>
-                </CardContent>
-              </MotionCard>
-            </Grid>
-          ))}
+                ) : (
+                  <Box sx={{ textAlign: 'center', py: 4 }}>
+                    <Typography color="text.secondary" variant="h6">
+                      No top performers data available
+                    </Typography>
+                  </Box>
+                )}
+              </CardContent>
+            </Collapse>
+          </Card>
         </Grid>
 
-        {/* Main Content Row */}
-        <Grid item container spacing={3} xs={12}>
-          {/* Left Column: Recent Incidents */}
-          <Grid item xs={12} md={8}>
-            <Grid container spacing={3}>
-              {/* Recent Incidents Card */}
-              <Grid item xs={12}>
-                <MotionCard
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                  className="hover-card"
+        {/* 30-Day Trends Chart */}
+        <Grid item xs={12}>
+          <Card>
+            <CardHeader
+              title="30-Day Trends"
+              action={
+                <IconButton
+                  onClick={() => handleExpandClick('trends')}
+                  size="small"
                 >
-                  <CardContent>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                      <Box>
-                        <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
-                          Recent Incidents
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Latest reported quality issues
-                        </Typography>
-                      </Box>
-                      <IconButton>
-                        <MoreVert />
-                      </IconButton>
-                    </Box>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      {recentIncidents.map((incident, index) => (
-                        <Box key={incident.id}>
-                          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
-                            <Avatar
-                              sx={{
-                                bgcolor: 
-                                  incident.status === 'Under Investigation' ? 'warning.light' :
-                                  incident.status === 'Resolved' ? 'success.light' : 'info.light',
-                                color:
-                                  incident.status === 'Under Investigation' ? 'warning.main' :
-                                  incident.status === 'Resolved' ? 'success.main' : 'info.main',
-                              }}
-                            >
-                              {incident.icon}
-                            </Avatar>
-                            <Box sx={{ flexGrow: 1 }}>
-                              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <Typography variant="subtitle1" sx={{ fontWeight: 'medium' }}>
-                                  {incident.product}
+                  {expanded.trends ? <ExpandLess /> : <ExpandMore />}
+                </IconButton>
+              }
+            />
+            <Collapse in={expanded.trends} timeout="auto" unmountOnExit>
+              <CardContent>
+                {analytics.trends && analytics.trends.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart
+                      data={analytics.trends}
+                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <RechartsTooltip
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            return (
+                              <Box sx={{ p: 2, bgcolor: 'background.paper', border: '1px solid #ccc' }}>
+                                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                  {payload[0].payload.date}
                                 </Typography>
-                                <Chip
-                                  label={incident.priority}
-                                  size="small"
-                                  color={
-                                    incident.priority === 'High' ? 'error' :
-                                    incident.priority === 'Medium' ? 'warning' : 'success'
-                                  }
-                                  sx={{ height: 24 }}
-                                />
+                                <Typography variant="body2" color="text.secondary">
+                                  Incidents: {payload[0].payload.count}
+                                </Typography>
                               </Box>
-                              <Typography variant="body2" color="text.secondary">
-                                {incident.company} • {incident.status}
-                              </Typography>
-                            </Box>
-                          </Box>
-                          {index < recentIncidents.length - 1 && <Divider />}
-                        </Box>
-                      ))}
-                    </Box>
-                    <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
-                      <Button
-                        variant="outlined"
-                        endIcon={<Timeline />}
-                        sx={{ borderRadius: 4 }}
-                      >
-                        View All Incidents
-                      </Button>
-                    </Box>
-                  </CardContent>
-                </MotionCard>
-              </Grid>
-
-              {/* Category Performance Card */}
-              <Grid item xs={12}>
-                <MotionCard
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 }}
-                  className="hover-card"
-                >
-                  <CardContent>
-                    <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
-                      Category Performance
+                            );
+                          }
+                          return null;
+                        }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="count"
+                        stroke="#8884d8"
+                        strokeWidth={2}
+                        dot={false}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <Box sx={{ textAlign: 'center', py: 4 }}>
+                    <Typography color="text.secondary" variant="h6">
+                      No trend data available
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                      Quality metrics by category
-                    </Typography>
-                    <Box sx={{ mt: 4 }}>
-                      {categories.map((category, index) => (
-                        <Box key={index} sx={{ mb: 3 }}>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                            <Typography variant="body2">{category.name}</Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              {category.progress}%
-                            </Typography>
-                          </Box>
-                          <LinearProgress
-                            variant="determinate"
-                            value={category.progress}
-                            sx={{
-                              height: 8,
-                              borderRadius: 4,
-                              bgcolor: 'grey.100',
-                              '& .MuiLinearProgress-bar': {
-                                borderRadius: 4,
-                                background: `linear-gradient(90deg, ${
-                                  category.progress > 80 ? '#4caf50' :
-                                  category.progress > 60 ? '#2196f3' : '#ff9800'
-                                } 0%, ${
-                                  category.progress > 80 ? '#81c784' :
-                                  category.progress > 60 ? '#64b5f6' : '#ffb74d'
-                                } 100%)`,
-                              },
-                            }}
-                          />
-                        </Box>
-                      ))}
-                    </Box>
-                  </CardContent>
-                </MotionCard>
-              </Grid>
-            </Grid>
-          </Grid>
-
-          {/* Right Column: Issue Distribution and Top Performers */}
-          <Grid item xs={12} md={4}>
-            <Grid container spacing={3}>
-              {/* Issue Distribution Card */}
-              <Grid item xs={12}>
-                <MotionCard
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6 }}
-                  className="hover-card"
-                >
-                  <CardContent>
-                    <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
-                      Issue Distribution
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                      Types of reported issues
-                    </Typography>
-                    <Box sx={{ height: 200, mt: 2 }}>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={pieChartData}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={60}
-                            outerRadius={80}
-                            paddingAngle={5}
-                            dataKey="value"
-                          >
-                            {pieChartData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={entry.color} />
-                            ))}
-                          </Pie>
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </Box>
-                    <Box sx={{ mt: 2 }}>
-                      {pieChartData.map((item, index) => (
-                        <Box
-                          key={index}
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 1,
-                            mb: 1,
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              width: 12,
-                              height: 12,
-                              borderRadius: '50%',
-                              bgcolor: item.color,
-                            }}
-                          />
-                          <Typography variant="body2">
-                            {item.name} ({item.value}%)
-                          </Typography>
-                        </Box>
-                      ))}
-                    </Box>
-                  </CardContent>
-                </MotionCard>
-              </Grid>
-
-              {/* Top Performers Card */}
-              <Grid item xs={12}>
-                <MotionCard
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.7 }}
-                  className="hover-card"
-                >
-                  <CardContent>
-                    <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
-                      Top Performers
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                      Highest quality scores
-                    </Typography>
-                    <List>
-                      {topPerformers.map((performer, index) => (
-                        <ListItem
-                          key={index}
-                          sx={{
-                            px: 0,
-                            borderBottom: index < topPerformers.length - 1 ? '1px solid' : 'none',
-                            borderColor: 'divider',
-                          }}
-                        >
-                          <Avatar
-                            sx={{
-                              bgcolor: 'primary.light',
-                              color: 'primary.main',
-                              mr: 2,
-                            }}
-                          >
-                            {performer.avatar}
-                          </Avatar>
-                          <ListItemText
-                            primary={performer.name}
-                            secondary={`Quality Score: ${performer.score}`}
-                          />
-                          <Chip
-                            label={`#${index + 1}`}
-                            size="small"
-                            sx={{
-                              bgcolor: index === 0 ? 'warning.light' : 'default',
-                              color: index === 0 ? 'warning.dark' : 'default',
-                            }}
-                          />
-                        </ListItem>
-                      ))}
-                    </List>
-                  </CardContent>
-                </MotionCard>
-              </Grid>
-            </Grid>
-          </Grid>
+                  </Box>
+                )}
+              </CardContent>
+            </Collapse>
+          </Card>
         </Grid>
       </Grid>
     </Container>
   );
 };
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 export default Dashboard;

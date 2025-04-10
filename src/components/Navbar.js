@@ -20,9 +20,11 @@ import {
   Settings as SettingsIcon,
   Dashboard as DashboardIcon,
   Report as ReportIcon,
+  RateReview as RateReviewIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import SimpleReviewForm from './SimpleReviewForm';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -56,7 +58,8 @@ const Navbar = () => {
   };
 
   const menuItems = [
-    { label: 'Dashboard', icon: <DashboardIcon />, action: () => navigate('/') },
+    { label: 'Dashboard', icon: <DashboardIcon />, action: () => navigate('/dashboard') },
+    { label: 'Reviews', icon: <RateReviewIcon />, action: () => navigate('/reviews') },
     { label: 'Profile', icon: <PersonIcon />, action: handleProfile },
     { label: 'Settings', icon: <SettingsIcon />, action: () => navigate('/settings') },
     { label: 'Logout', icon: <LogoutIcon />, action: handleLogout },
@@ -93,11 +96,26 @@ const Navbar = () => {
 
         {/* Desktop Navigation */}
         <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 1 }}>
-          <Button color="inherit" onClick={() => navigate('/')}>
+          <Button
+            color="inherit"
+            onClick={() => navigate('/dashboard')}
+            startIcon={<DashboardIcon />}
+          >
             Dashboard
           </Button>
-          <Button color="inherit" onClick={() => navigate('/incidents')}>
+          <Button
+            color="inherit"
+            onClick={() => navigate('/incidents')}
+            startIcon={<ReportIcon />}
+          >
             Incidents
+          </Button>
+          <Button
+            color="inherit"
+            onClick={() => navigate('/reviews')}
+            startIcon={<RateReviewIcon />}
+          >
+            Reviews
           </Button>
           <Button 
             color="inherit" 
@@ -112,6 +130,7 @@ const Navbar = () => {
           >
             File Complaint
           </Button>
+          <SimpleReviewForm />
           <Button color="inherit" onClick={() => navigate('/analytics')}>
             Analytics
           </Button>
@@ -136,6 +155,21 @@ const Navbar = () => {
           )}
         </Box>
 
+        {/* Mobile Menu */}
+        <Menu
+          anchorEl={mobileMenuAnchorEl}
+          open={Boolean(mobileMenuAnchorEl)}
+          onClose={handleMenuClose}
+          onClick={handleMenuClose}
+        >
+          {menuItems.map((item) => (
+            <MenuItem key={item.label} onClick={item.action}>
+              <ListItemIcon>{item.icon}</ListItemIcon>
+              {item.label}
+            </MenuItem>
+          ))}
+        </Menu>
+
         {/* Profile Menu */}
         <Menu
           anchorEl={anchorEl}
@@ -154,21 +188,6 @@ const Navbar = () => {
             </Typography>
           </Box>
           <Divider />
-          {menuItems.map((item) => (
-            <MenuItem key={item.label} onClick={item.action}>
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              {item.label}
-            </MenuItem>
-          ))}
-        </Menu>
-
-        {/* Mobile Menu */}
-        <Menu
-          anchorEl={mobileMenuAnchorEl}
-          open={Boolean(mobileMenuAnchorEl)}
-          onClose={handleMenuClose}
-          onClick={handleMenuClose}
-        >
           {menuItems.map((item) => (
             <MenuItem key={item.label} onClick={item.action}>
               <ListItemIcon>{item.icon}</ListItemIcon>

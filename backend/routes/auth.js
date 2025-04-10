@@ -7,8 +7,21 @@ const router = express.Router();
 
 // Register
 router.post('/register', async (req, res) => {
+  const { username, email, password, company } = req.body;
+
+  // Input validation
+  if (!username || !email || !password || !company) {
+    return res.status(400).json({ message: 'All fields are required' });
+  }
+
+  if (!/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/.test(email)) {
+    return res.status(400).json({ message: 'Invalid email format' });
+  }
+
+  if (username.length < 3 || username.length > 30) {
+    return res.status(400).json({ message: 'Username must be between 3 and 30 characters' });
+  }
   try {
-    const { username, email, password, company } = req.body;
     
     // Check if user already exists
     const existingUser = await User.findOne({ $or: [{ email }, { username }] });
