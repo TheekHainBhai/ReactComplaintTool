@@ -14,6 +14,8 @@ import Analytics from './components/Analytics';
 import Login from './components/Login';
 import Register from './components/Register';
 import Profile from './components/Profile';
+import FSSAIVerification from './components/FSSAIVerification';
+import FSSAIRegistrationList from './components/FSSAIRegistrationList';
 
 const theme = createTheme({
   palette: {
@@ -140,6 +142,9 @@ const App = () => {
             <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
             <Route path="/reviews" element={<AllReviews />} />
             <Route path="/reviews/:productId" element={<PrivateRoute><ProductReviewPage /></PrivateRoute>} />
+            <Route path="/fssai/verify" element={<PrivateRoute><FSSAIVerification /></PrivateRoute>} />
+            <Route path="/fssai/register" element={<PrivateRoute><FSSAIVerification initialTab="registration" /></PrivateRoute>} />
+            <Route path="/fssai/list" element={<PrivateRoute><FSSAIRegistrationList /></PrivateRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Router>

@@ -21,6 +21,9 @@ import {
   Dashboard as DashboardIcon,
   Report as ReportIcon,
   RateReview as RateReviewIcon,
+  VerifiedUser as VerifiedUserIcon,
+  AppRegistration as AppRegistrationIcon,
+  List as ListIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -60,6 +63,9 @@ const Navbar = () => {
   const menuItems = [
     { label: 'Dashboard', icon: <DashboardIcon />, action: () => navigate('/dashboard') },
     { label: 'Reviews', icon: <RateReviewIcon />, action: () => navigate('/reviews') },
+    { label: 'FSSAI Verify', icon: <VerifiedUserIcon />, action: () => navigate('/fssai/verify') },
+    { label: 'FSSAI Register', icon: <AppRegistrationIcon />, action: () => navigate('/fssai/register') },
+    { label: 'FSSAI List', icon: <ListIcon />, action: () => navigate('/fssai/list') },
     { label: 'Profile', icon: <PersonIcon />, action: handleProfile },
     { label: 'Settings', icon: <SettingsIcon />, action: () => navigate('/settings') },
     { label: 'Logout', icon: <LogoutIcon />, action: handleLogout },
@@ -133,6 +139,27 @@ const Navbar = () => {
           <SimpleReviewForm />
           <Button color="inherit" onClick={() => navigate('/analytics')}>
             Analytics
+          </Button>
+          <Button
+            color="inherit"
+            onClick={() => navigate('/fssai/verify')}
+            startIcon={<VerifiedUserIcon />}
+          >
+            FSSAI Verify
+          </Button>
+          <Button
+            color="inherit"
+            onClick={() => navigate('/fssai/register')}
+            startIcon={<AppRegistrationIcon />}
+          >
+            FSSAI Register
+          </Button>
+          <Button
+            color="inherit"
+            onClick={() => navigate('/fssai/list')}
+            startIcon={<ListIcon />}
+          >
+            FSSAI List
           </Button>
 
           {user ? (

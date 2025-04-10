@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
-    "start": "set NODE_OPTIONS=--openssl-legacy-provider && react-scripts start",
+    "start": "node server.js",
     "dev": "nodemon server.js"
   },
   "keywords": [],

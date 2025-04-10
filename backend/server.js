@@ -11,6 +11,7 @@ const analyticsRoutes = require('./routes/analytics');
 const reviewRoutes = require('./routes/reviewRoutes');
 const productsRoutes = require('./routes/products');
 const complaintRoutes = require('./routes/complaints');
+const fssaiRoutes = require('./routes/fssai');
 
 dotenv.config();
 
@@ -69,6 +70,7 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/products', productsRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/complaints', complaintRoutes);
+app.use('/api/fssai', fssaiRoutes);
 
 // Error handling middleware
 app.use(errorHandler);
