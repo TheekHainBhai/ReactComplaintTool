@@ -138,7 +138,7 @@ const Home = () => {
           }}
         >
           <Typography variant="h2" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
-            Welcome to Quality Dashboard
+            Welcome to Quality Management Software
           </Typography>
           <Typography variant="h5" sx={{ mb: 4, opacity: 0.9 }}>
             Your comprehensive solution for quality management and compliance

@@ -31,6 +31,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import SimpleReviewForm from './SimpleReviewForm';
+import logo from '../assets/WhatsApp Image 2025-04-10 at 12.53.22_8af46ac0.jpg';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -86,15 +87,8 @@ const Navbar = () => {
     <AppBar position="static" color="default" elevation={0}>
       <Container maxWidth="lg">
         <Toolbar disableGutters>
-          <Typography
-            variant="h6"
-            noWrap
-            component="div"
-            sx={{ mr: 2, display: { xs: 'none', md: 'flex' } }}
-          >
-            Quality Dashboard
-          </Typography>
-
+          <img src={logo} alt="QMS Logo" style={{ height: '40px', marginRight: '10px' }} />
+          {/* Removed Quality Management Software name */}
           {/* Desktop Navigation */}
           <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 1 }}>
             <Button
