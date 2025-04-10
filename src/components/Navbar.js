@@ -39,6 +39,8 @@ const Navbar = () => {
   const theme = useTheme();
   const [anchorEl, setAnchorEl] = useState(null);
   const [mobileMenuAnchorEl, setMobileMenuAnchorEl] = useState(null);
+  const [servicesAnchorEl, setServicesAnchorEl] = useState(null);
+  const [fssaiAnchorEl, setFssaiAnchorEl] = useState(null);
 
   const handleProfileMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -51,6 +53,22 @@ const Navbar = () => {
   const handleMenuClose = () => {
     setAnchorEl(null);
     setMobileMenuAnchorEl(null);
+  };
+
+  const handleServicesMenuOpen = (event) => {
+    setServicesAnchorEl(event.currentTarget);
+  };
+
+  const handleServicesMenuClose = () => {
+    setServicesAnchorEl(null);
+  };
+
+  const handleFssaiMenuOpen = (event) => {
+    setFssaiAnchorEl(event.currentTarget);
+  };
+
+  const handleFssaiMenuClose = () => {
+    setFssaiAnchorEl(null);
   };
 
   const handleProfile = () => {
@@ -66,15 +84,23 @@ const Navbar = () => {
 
   const menuItems = [
     { label: 'Home', icon: <HomeIcon />, action: () => navigate('/') },
-    { label: 'Complaints', icon: <RateReviewIcon />, action: () => navigate('/complaints') },
-    { label: 'Reviews', icon: <RateReviewIcon />, action: () => navigate('/reviews') },
-    { label: 'FSSAI Verify', icon: <VerifiedUserIcon />, action: () => navigate('/fssai/verify') },
-    { label: 'FSSAI Register', icon: <AppRegistrationIcon />, action: () => navigate('/fssai/register') },
+    { label: 'Services', icon: <ListIcon />, action: () => navigate('/services') },
     ...(user?.isAdmin ? [
-      { label: 'Incidents', icon: <ReportIcon />, action: () => navigate('/incidents') },
-      { label: 'FSSAI List', icon: <ListIcon />, action: () => navigate('/fssai/list') },
       { label: 'Admin Dashboard', icon: <DashboardIcon />, action: () => navigate('/dashboard') }
     ] : [])
+  ];
+
+  const servicesMenuItems = [
+    { label: 'Complaints', icon: <RateReviewIcon />, action: () => navigate('/complaints') },
+    { label: 'Reviews', icon: <RateReviewIcon />, action: () => navigate('/reviews') },
+    ...(user?.isAdmin ? [
+      { label: 'Incidents', icon: <ReportIcon />, action: () => navigate('/incidents') }
+    ] : [])
+  ];
+
+  const fssaiMenuItems = [
+    { label: 'FSSAI Verify', icon: <VerifiedUserIcon />, action: () => navigate('/fssai/verify') },
+    { label: 'FSSAI Register', icon: <AppRegistrationIcon />, action: () => navigate('/fssai/register') },
   ];
 
   const profileMenuItems = [
@@ -85,10 +111,9 @@ const Navbar = () => {
 
   return (
     <AppBar position="static" color="default" elevation={0}>
-      <Container maxWidth="lg">
-        <Toolbar disableGutters>
-          <img src={logo} alt="QMS Logo" style={{ height: '40px', marginRight: '10px' }} />
-          {/* Removed Quality Management Software name */}
+      <Container maxWidth="lg" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <img src={logo} alt="QMS Logo" style={{ height: '40px', marginRight: '10px' }} />
+        <Toolbar disableGutters sx={{ flexGrow: 1, justifyContent: 'flex-end' }}>
           {/* Desktop Navigation */}
           <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 1 }}>
             <Button
@@ -100,48 +125,48 @@ const Navbar = () => {
             </Button>
             <Button
               color="inherit"
-              onClick={() => navigate('/complaints')}
-              startIcon={<RateReviewIcon />}
+              onClick={handleServicesMenuOpen}
+              startIcon={<ListIcon />}
             >
-              Complaints
+              Services
             </Button>
+            <Menu
+              anchorEl={servicesAnchorEl}
+              open={Boolean(servicesAnchorEl)}
+              onClose={handleServicesMenuClose}
+              transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+              anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+            >
+              {servicesMenuItems.map((item) => (
+                <MenuItem key={item.label} onClick={() => { item.action(); handleServicesMenuClose(); }}>
+                  <ListItemIcon>{item.icon}</ListItemIcon>
+                  {item.label}
+                </MenuItem>
+              ))}
+            </Menu>
             <Button
               color="inherit"
-              onClick={() => navigate('/reviews')}
-              startIcon={<RateReviewIcon />}
-            >
-              Reviews
-            </Button>
-            <Button
-              color="inherit"
-              onClick={() => navigate('/fssai/verify')}
+              onClick={handleFssaiMenuOpen}
               startIcon={<VerifiedUserIcon />}
             >
-              FSSAI Verify
+              FSSAI Services
             </Button>
-            <Button
-              color="inherit"
-              onClick={() => navigate('/fssai/register')}
-              startIcon={<AppRegistrationIcon />}
+            <Menu
+              anchorEl={fssaiAnchorEl}
+              open={Boolean(fssaiAnchorEl)}
+              onClose={handleFssaiMenuClose}
+              transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+              anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
             >
-              FSSAI Register
-            </Button>
+              {fssaiMenuItems.map((item) => (
+                <MenuItem key={item.label} onClick={() => { item.action(); handleFssaiMenuClose(); }}>
+                  <ListItemIcon>{item.icon}</ListItemIcon>
+                  {item.label}
+                </MenuItem>
+              ))}
+            </Menu>
             {user?.isAdmin && (
               <>
-                <Button
-                  color="inherit"
-                  onClick={() => navigate('/incidents')}
-                  startIcon={<ReportIcon />}
-                >
-                  Incidents
-                </Button>
-                <Button
-                  color="inherit"
-                  onClick={() => navigate('/fssai/list')}
-                  startIcon={<ListIcon />}
-                >
-                  FSSAI List
-                </Button>
                 <Button
                   color="inherit"
                   onClick={() => navigate('/dashboard')}
