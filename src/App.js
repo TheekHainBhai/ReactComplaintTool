@@ -1,5 +1,6 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import Home from './components/Home';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -14,8 +15,11 @@ import Analytics from './components/Analytics';
 import Login from './components/Login';
 import Register from './components/Register';
 import Profile from './components/Profile';
+import PrivateRoute from './components/PrivateRoute';
+import AdminRoute from './components/AdminRoute';
 import FSSAIVerification from './components/FSSAIVerification';
 import FSSAIRegistrationList from './components/FSSAIRegistrationList';
+import Dashboard from './components/Dashboard';
 
 const theme = createTheme({
   palette: {
@@ -111,18 +115,11 @@ const theme = createTheme({
   },
 });
 
-const PrivateRoute = ({ children }) => {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  if (!user) {
-    return <Navigate to="/login" />;
-  }
-
-  return children;
+const NavbarWrapper = () => {
+  const location = useLocation();
+  const hideNavbarPaths = ["/login", "/register"];
+  
+  return !hideNavbarPaths.includes(location.pathname) ? <Navbar /> : null;
 };
 
 const App = () => {
@@ -131,20 +128,21 @@ const App = () => {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <Router>
-          <Navbar />
+          <NavbarWrapper />
           <Routes>
-            <Route path="/" element={<PrivateRoute><Analytics /></PrivateRoute>} />
-            <Route path="/incidents" element={<PrivateRoute><IncidentTracking /></PrivateRoute>} />
+            <Route path="/" element={<PrivateRoute><Home /></PrivateRoute>} />
+            <Route path="/analytics" element={<AdminRoute><Analytics /></AdminRoute>} />
+            <Route path="/dashboard" element={<AdminRoute><Dashboard /></AdminRoute>} />
+            <Route path="/incidents" element={<AdminRoute><IncidentTracking /></AdminRoute>} />
             <Route path="/complaints" element={<PrivateRoute><ComplaintForm /></PrivateRoute>} />
-            <Route path="/analytics" element={<Analytics />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
-            <Route path="/reviews" element={<AllReviews />} />
+            <Route path="/reviews" element={<PrivateRoute><AllReviews /></PrivateRoute>} />
             <Route path="/reviews/:productId" element={<PrivateRoute><ProductReviewPage /></PrivateRoute>} />
             <Route path="/fssai/verify" element={<PrivateRoute><FSSAIVerification /></PrivateRoute>} />
             <Route path="/fssai/register" element={<PrivateRoute><FSSAIVerification initialTab="registration" /></PrivateRoute>} />
-            <Route path="/fssai/list" element={<PrivateRoute><FSSAIRegistrationList /></PrivateRoute>} />
+            <Route path="/fssai/list" element={<AdminRoute><FSSAIRegistrationList /></AdminRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Router>

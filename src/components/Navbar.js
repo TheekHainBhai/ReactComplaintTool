@@ -12,6 +12,7 @@ import {
   Divider,
   ListItemIcon,
   useTheme,
+  Container
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -24,6 +25,8 @@ import {
   VerifiedUser as VerifiedUserIcon,
   AppRegistration as AppRegistrationIcon,
   List as ListIcon,
+  Home as HomeIcon,
+  Analytics as AnalyticsIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -61,168 +64,162 @@ const Navbar = () => {
   };
 
   const menuItems = [
-    { label: 'Dashboard', icon: <DashboardIcon />, action: () => navigate('/dashboard') },
+    { label: 'Home', icon: <HomeIcon />, action: () => navigate('/') },
+    { label: 'Complaints', icon: <RateReviewIcon />, action: () => navigate('/complaints') },
     { label: 'Reviews', icon: <RateReviewIcon />, action: () => navigate('/reviews') },
     { label: 'FSSAI Verify', icon: <VerifiedUserIcon />, action: () => navigate('/fssai/verify') },
     { label: 'FSSAI Register', icon: <AppRegistrationIcon />, action: () => navigate('/fssai/register') },
-    { label: 'FSSAI List', icon: <ListIcon />, action: () => navigate('/fssai/list') },
+    ...(user?.isAdmin ? [
+      { label: 'Incidents', icon: <ReportIcon />, action: () => navigate('/incidents') },
+      { label: 'FSSAI List', icon: <ListIcon />, action: () => navigate('/fssai/list') },
+      { label: 'Admin Dashboard', icon: <DashboardIcon />, action: () => navigate('/dashboard') }
+    ] : [])
+  ];
+
+  const profileMenuItems = [
     { label: 'Profile', icon: <PersonIcon />, action: handleProfile },
     { label: 'Settings', icon: <SettingsIcon />, action: () => navigate('/settings') },
-    { label: 'Logout', icon: <LogoutIcon />, action: handleLogout },
+    { label: 'Logout', icon: <LogoutIcon />, action: handleLogout }
   ];
 
   return (
-    <AppBar position="static" elevation={1}>
-      <Toolbar>
-        <IconButton
-          edge="start"
-          color="inherit"
-          aria-label="menu"
-          onClick={handleMobileMenuOpen}
-          sx={{ mr: 2, display: { md: 'none' } }}
-        >
-          <MenuIcon />
-        </IconButton>
+    <AppBar position="static" color="default" elevation={0}>
+      <Container maxWidth="lg">
+        <Toolbar disableGutters>
+          <Typography
+            variant="h6"
+            noWrap
+            component="div"
+            sx={{ mr: 2, display: { xs: 'none', md: 'flex' } }}
+          >
+            Quality Dashboard
+          </Typography>
 
-        <Typography
-          variant="h6"
-          component="div"
-          sx={{
-            flexGrow: 1,
-            cursor: 'pointer',
-            fontWeight: 'bold',
-            background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-          }}
-          onClick={() => navigate('/')}
-        >
-          Quality Dashboard
-        </Typography>
-
-        {/* Desktop Navigation */}
-        <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 1 }}>
-          <Button
-            color="inherit"
-            onClick={() => navigate('/dashboard')}
-            startIcon={<DashboardIcon />}
-          >
-            Dashboard
-          </Button>
-          <Button
-            color="inherit"
-            onClick={() => navigate('/incidents')}
-            startIcon={<ReportIcon />}
-          >
-            Incidents
-          </Button>
-          <Button
-            color="inherit"
-            onClick={() => navigate('/reviews')}
-            startIcon={<RateReviewIcon />}
-          >
-            Reviews
-          </Button>
-          <Button 
-            color="inherit" 
-            onClick={() => navigate('/complaints')}
-            sx={{ 
-              background: theme.palette.secondary.main, 
-              color: 'white',
-              '&:hover': {
-                background: theme.palette.secondary.dark,
-              }
-            }}
-          >
-            File Complaint
-          </Button>
-          <SimpleReviewForm />
-          <Button color="inherit" onClick={() => navigate('/analytics')}>
-            Analytics
-          </Button>
-          <Button
-            color="inherit"
-            onClick={() => navigate('/fssai/verify')}
-            startIcon={<VerifiedUserIcon />}
-          >
-            FSSAI Verify
-          </Button>
-          <Button
-            color="inherit"
-            onClick={() => navigate('/fssai/register')}
-            startIcon={<AppRegistrationIcon />}
-          >
-            FSSAI Register
-          </Button>
-          <Button
-            color="inherit"
-            onClick={() => navigate('/fssai/list')}
-            startIcon={<ListIcon />}
-          >
-            FSSAI List
-          </Button>
-
-          {user ? (
-            <IconButton onClick={handleProfileMenuOpen} sx={{ ml: 2 }}>
-              <Avatar
-                sx={{
-                  bgcolor: theme.palette.primary.main,
-                  width: 35,
-                  height: 35,
-                }}
-                src={user.avatar}
-              >
-                {user.username?.charAt(0)?.toUpperCase()}
-              </Avatar>
-            </IconButton>
-          ) : (
-            <Button color="inherit" onClick={() => navigate('/login')}>
-              Login
+          {/* Desktop Navigation */}
+          <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 1 }}>
+            <Button
+              color="inherit"
+              onClick={() => navigate('/')}
+              startIcon={<HomeIcon />}
+            >
+              Home
             </Button>
-          )}
-        </Box>
-
-        {/* Mobile Menu */}
-        <Menu
-          anchorEl={mobileMenuAnchorEl}
-          open={Boolean(mobileMenuAnchorEl)}
-          onClose={handleMenuClose}
-          onClick={handleMenuClose}
-        >
-          {menuItems.map((item) => (
-            <MenuItem key={item.label} onClick={item.action}>
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              {item.label}
-            </MenuItem>
-          ))}
-        </Menu>
-
-        {/* Profile Menu */}
-        <Menu
-          anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          onClose={handleMenuClose}
-          onClick={handleMenuClose}
-          transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-        >
-          <Box sx={{ py: 1, px: 2 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-              {user?.username || 'User'}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {user?.company || 'Company'}
-            </Typography>
+            <Button
+              color="inherit"
+              onClick={() => navigate('/complaints')}
+              startIcon={<RateReviewIcon />}
+            >
+              Complaints
+            </Button>
+            <Button
+              color="inherit"
+              onClick={() => navigate('/reviews')}
+              startIcon={<RateReviewIcon />}
+            >
+              Reviews
+            </Button>
+            <Button
+              color="inherit"
+              onClick={() => navigate('/fssai/verify')}
+              startIcon={<VerifiedUserIcon />}
+            >
+              FSSAI Verify
+            </Button>
+            <Button
+              color="inherit"
+              onClick={() => navigate('/fssai/register')}
+              startIcon={<AppRegistrationIcon />}
+            >
+              FSSAI Register
+            </Button>
+            {user?.isAdmin && (
+              <>
+                <Button
+                  color="inherit"
+                  onClick={() => navigate('/incidents')}
+                  startIcon={<ReportIcon />}
+                >
+                  Incidents
+                </Button>
+                <Button
+                  color="inherit"
+                  onClick={() => navigate('/fssai/list')}
+                  startIcon={<ListIcon />}
+                >
+                  FSSAI List
+                </Button>
+                <Button
+                  color="inherit"
+                  onClick={() => navigate('/dashboard')}
+                  startIcon={<DashboardIcon />}
+                >
+                  Admin Dashboard
+                </Button>
+              </>
+            )}
+            <SimpleReviewForm />
+            {user ? (
+              <IconButton onClick={handleProfileMenuOpen} sx={{ ml: 2 }}>
+                <Avatar
+                  sx={{
+                    bgcolor: theme.palette.primary.main,
+                    width: 35,
+                    height: 35,
+                  }}
+                  src={user.avatar}
+                >
+                  {user.username?.charAt(0)?.toUpperCase()}
+                </Avatar>
+              </IconButton>
+            ) : (
+              <Button color="inherit" onClick={() => navigate('/login')}>
+                Login
+              </Button>
+            )}
           </Box>
-          <Divider />
-          {menuItems.map((item) => (
-            <MenuItem key={item.label} onClick={item.action}>
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              {item.label}
-            </MenuItem>
-          ))}
-        </Menu>
-      </Toolbar>
+
+          {/* Mobile Menu */}
+          <Menu
+            anchorEl={mobileMenuAnchorEl}
+            open={Boolean(mobileMenuAnchorEl)}
+            onClose={handleMenuClose}
+            onClick={handleMenuClose}
+          >
+            {menuItems.map((item) => (
+              <MenuItem key={item.label} onClick={item.action}>
+                <ListItemIcon>{item.icon}</ListItemIcon>
+                {item.label}
+              </MenuItem>
+            ))}
+          </Menu>
+
+          {/* Profile Menu */}
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleMenuClose}
+            onClick={handleMenuClose}
+            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+          >
+            <Box sx={{ py: 1, px: 2 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                {user?.username || 'User'}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {user?.company || 'Company'}
+              </Typography>
+            </Box>
+            <Divider />
+            {profileMenuItems.map((item) => (
+              <MenuItem key={item.label} onClick={item.action}>
+                <ListItemIcon>{item.icon}</ListItemIcon>
+                {item.label}
+              </MenuItem>
+            ))}
+          </Menu>
+        </Toolbar>
+      </Container>
     </AppBar>
   );
 };

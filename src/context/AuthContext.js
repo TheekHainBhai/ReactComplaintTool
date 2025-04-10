@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import axios from 'axios';
 import { auth } from '../services/api';
 
 const AuthContext = createContext(null);
@@ -30,9 +31,11 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       setError(null);
-      const response = await auth.login(credentials);
-      localStorage.setItem('token', response.data.token);
-      setUser(response.data.user);
+      const response = await axios.post('http://localhost:5002/api/auth/login', credentials);
+      const { token, user } = response.data;
+      localStorage.setItem('token', token);
+      localStorage.setItem('isAdmin', user.isAdmin);
+      setUser(user);
       return response.data;
     } catch (error) {
       console.error('Login failed:', error);

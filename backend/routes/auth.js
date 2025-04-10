@@ -40,17 +40,20 @@ router.post('/register', async (req, res) => {
     await user.save();
 
     // Generate token
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: '24h',
-    });
+    const token = jwt.sign(
+      { userId: user._id, email: user.email, isAdmin: user.isAdmin },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
 
-    res.status(201).json({
+    res.json({
       token,
       user: {
         id: user._id,
         username: user.username,
         email: user.email,
         company: user.company,
+        isAdmin: user.isAdmin,
         role: user.role,
       },
     });
@@ -76,20 +79,21 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Generate token
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: '24h',
-    });
+    // Create JWT token
+    const token = jwt.sign(
+      { userId: user._id, email: user.email, isAdmin: user.isAdmin },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
 
     res.json({
       token,
       user: {
-        id: user._id,
+        _id: user._id,
         username: user.username,
         email: user.email,
-        company: user.company,
-        role: user.role,
-      },
+        isAdmin: user.isAdmin
+      }
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });

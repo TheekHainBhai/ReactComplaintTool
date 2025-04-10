@@ -12,6 +12,8 @@ const reviewRoutes = require('./routes/reviewRoutes');
 const productsRoutes = require('./routes/products');
 const complaintRoutes = require('./routes/complaints');
 const fssaiRoutes = require('./routes/fssai');
+const dashboardRoutes = require('./routes/dashboard');
+const tempAdminRoutes = require('./routes/temp-admin');
 
 dotenv.config();
 
@@ -71,6 +73,8 @@ app.use('/api/products', productsRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/complaints', complaintRoutes);
 app.use('/api/fssai', fssaiRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/temp', tempAdminRoutes);
 
 // Error handling middleware
 app.use(errorHandler);
